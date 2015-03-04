@@ -67,5 +67,8 @@ def main():
         redis_connection.lpush("q:in:kluge:stt:english", unique_id + ":" + str(chunk_count))
         redis_connection.hset("q:stat:kluge:stt:english", unique_id + ":" + str(chunk_count), "q:in:kluge:stt:english")
 
+        if chunk_count >= 3:
+            break
+
 if __name__ == '__main__':
     main()
