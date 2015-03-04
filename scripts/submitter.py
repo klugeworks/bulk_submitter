@@ -7,6 +7,7 @@ import os
 import glob
 from urlparse import urlparse
 from kluge_bs.io.tokenizer_job_pb2 import TokenizerJobMessage
+import uuid
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ def main():
 
     files = glob.glob(os.path.join(args.audio_path, '*' + args.audio_ext))
     chunk_count = 0
+    unique_id = str(uuid.uuid4())
     for file in files:
         chunk_count += 1
 
@@ -52,17 +54,18 @@ def main():
             audio_bytes = audio_file.read()
 
         job = TokenizerJobMessage()
-        job.uid = basename
+        job.uid = unique_id
         job.language = 'english'
         job.chunk = chunk_count
-        job.audio_uri = abs_path
+        job.audio_uri = basename
         job.raw_audio = audio_bytes
         job.format = TokenizerJobMessage.UL
         job.sample_rate = 8000
         job.sample_size = 8
         logger.info('Submitting job for ' + basename)
-        redis_connection.lpush(args.work_queue, job.SerializeToString())
-
+        redis_connection.hset("kluge:stt:pb:job:" + unique_id, str(chunk_count), job.SerializeToString())
+        redis_connection.lpush("q:in:kluge:stt:english", unique_id + ":" + str(chunk_count))
+        redis_connection.hset("q:stat:kluge:stt:english", unique_id + ":" + str(chunk_count), "in")
 
 if __name__ == '__main__':
     main()
