@@ -65,7 +65,7 @@ def main():
         logger.info('Submitting job for ' + basename)
         redis_connection.hset("kluge:stt:pb:job:" + unique_id, str(chunk_count), job.SerializeToString())
         redis_connection.lpush("q:in:kluge:stt:english", unique_id + ":" + str(chunk_count))
-        redis_connection.hset("q:stat:kluge:stt:english", unique_id + ":" + str(chunk_count), "in")
+        redis_connection.hset("q:stat:kluge:stt:english", unique_id + ":" + str(chunk_count), "q:in:kluge:stt:english")
 
 if __name__ == '__main__':
     main()
